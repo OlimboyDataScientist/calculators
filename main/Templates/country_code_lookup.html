@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-5">
+  <div class="row justify-content-center">
+    <div class="col-md-10 col-lg-8">
+
+      <h2 class="text-center mb-4">
+        <i class="bi bi-globe2 me-2 text-primary"></i> Country Info Finder
+      </h2>
+
+      <div class="text-center text-muted mb-4">
+        <p>This tool helps you find country information based on:</p>
+        <ul class="list-unstyled">
+          <li>🌍 Full country name (e.g., <code>United States</code>)</li>
+          <li>🔤 ISO 2-letter code (e.g., <code>US</code>)</li>
+          <li>📞 Phone dial code (e.g., <code>+1</code> or <code>1</code>)</li>
+        </ul>
+        <p>You'll receive details like the country name, ISO code, phone code, and an example number format.</p>
+      </div>
+
+      <div class="card shadow-sm mb-4">
+        <div class="card-body p-4">
+          <form method="post" id="lookupForm">
+            {% csrf_token %}
+            <div class="mb-3">
+              <label for="query" class="form-label fw-bold">Enter Query</label>
+              <input
+                type="text"
+                class="form-control form-control-lg"
+                id="query"
+                name="query"
+                placeholder="e.g., US, United States, +1, 998"
+                required
+              />
+            </div>
+            <div class="d-grid">
+              <button type="submit" class="btn btn-primary btn-lg">
+                <i class="bi bi-search me-1"></i> Search
+              </button>
+            </div>
+          </form>
+
+          {% if result %}
+            <div class="alert alert-success mt-4">
+              <h5 class="text-center mb-3"><i class="bi bi-check-circle-fill"></i> Found Countries</h5>
+              {% for item in result %}
+                <div class="border rounded p-3 mb-3">
+                  <p class="mb-1"><strong>Country Name:</strong> {{ item.name }}</p>
+                  <p class="mb-1"><strong>ISO Code:</strong> {{ item.iso }}</p>
+                  <p class="mb-1"><strong>Dial Code:</strong> +{{ item.code }}</p>
+                  <p class="mb-0"><strong>Example Number:</strong> {{ item.example_number }}</p>
+                </div>
+              {% endfor %}
+            </div>
+          {% elif error %}
+            <div class="alert alert-danger mt-4 text-center">
+              <h5 class="mb-3"><i class="bi bi-x-circle-fill"></i> Error</h5>
+              <p>{{ error }}</p>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="text-muted small text-center">
+        Need help? Try searching for <code>US</code>, <code>United States</code>, or <code>+1</code>.
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}

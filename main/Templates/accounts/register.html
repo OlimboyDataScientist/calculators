@@ -1,0 +1,164 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-5">
+  <div class="row justify-content-center">
+    <div class="col-md-7 col-lg-6"> {# Adjust column size for a comfortable width #}
+      <div class="card shadow-lg p-4 p-md-5"> {# Added shadow and more padding #}
+        <div class="card-body">
+          <h2 class="card-title text-center mb-4">
+            <i class="bi bi-person-plus-fill me-2 text-primary"></i> Register
+          </h2>
+          <p class="card-text text-center text-muted mb-4">
+            Create your account to get started.
+          </p>
+
+          {# Display global messages from Django's messages framework #}
+          {% if messages %}
+            {% for message in messages %}
+              <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+              </div>
+            {% endfor %}
+          {% endif %}
+
+          {# Display non-field errors from the form #}
+          {% if form.non_field_errors %}
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+              {% for error in form.non_field_errors %}
+                <p class="mb-0">{{ error }}</p>
+              {% endfor %}
+              <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+          {% endif %}
+
+          <form method="POST" novalidate id="registerForm">
+            {% csrf_token %}
+
+            {% for field in form %}
+              <div class="mb-3">
+                <label for="{{ field.id_for_label }}" class="form-label fw-bold">
+                    {{ field.label }}
+                    {% if field.field.required %}<span class="text-danger">*</span>{% endif %} {# Optional: indicate required fields #}
+                </label>
+
+                {# Manually render input/textarea to apply custom Bootstrap classes #}
+                {% if field.field.widget.input_type == 'textarea' %}
+                  <textarea
+                    class="form-control rounded-lg {% if field.errors %}is-invalid{% endif %}"
+                    id="{{ field.id_for_label }}"
+                    name="{{ field.name }}"
+                    placeholder="{{ field.label }}" {# Use label as placeholder if not defined in form #}
+                    rows="{{ field.field.widget.attrs.rows|default:5 }}"
+                    {% if field.field.required %}required{% endif %}
+                  >{{ field.value|default_if_none:'' }}</textarea>
+                {% else %}
+                  <input
+                    type="{{ field.field.widget.input_type }}"
+                    class="form-control form-control-lg rounded-pill {% if field.errors %}is-invalid{% endif %}"
+                    id="{{ field.id_for_label }}"
+                    name="{{ field.name }}"
+                    placeholder="{{ field.label }}" {# Use label as placeholder if not defined in form #}
+                    value="{{ field.value|default_if_none:'' }}"
+                    {% if field.field.required %}required{% endif %}
+                    {% if field.name == 'username' %}autofocus{% endif %} {# Example: Autofocus on username #}
+                  />
+                {% endif %}
+
+                {% if field.help_text %}
+                  <div class="form-text">{{ field.help_text }}</div>
+                {% endif %}
+                {% for error in field.errors %}
+                  <div class="invalid-feedback d-block">{{ error }}</div> {# d-block ensures visibility #}
+                {% endfor %}
+              </div>
+            {% endfor %}
+
+            {# Custom Password Features #}
+            <div class="mb-3">
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="showPasswordToggle" onclick="togglePassword()">
+                <label class="form-check-label" for="showPasswordToggle">
+                  Show Passwords
+                </label>
+              </div>
+              <div id="password-strength" class="form-text mt-1"></div>
+            </div>
+
+            <div class="d-grid gap-2 mb-4"> {# mb-4 for space before login link #}
+              <button type="submit" class="btn btn-primary btn-lg" id="registerButton">
+                <i class="bi bi-person-check-fill me-2"></i> Register
+              </button>
+            </div>
+
+            <div class="text-center">
+              <p class="text-muted mb-2">Already have an account?</p>
+              <a href="{% url 'login' %}" class="btn btn-outline-secondary btn-sm rounded-pill">Login Here</a> {# Link to your login page #}
+            </div>
+
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Assuming your password fields are named 'password' and 'password2'
+  // and their IDs will be 'id_password' and 'id_password2' by Django.
+  const passwordInput = document.getElementById("id_password");
+  const password2Input = document.getElementById("id_password2"); // For confirmation field
+  const strengthText = document.getElementById("password-strength");
+
+  if (passwordInput) {
+    passwordInput.addEventListener("input", () => {
+      const value = passwordInput.value;
+      let strength = "";
+      let color = "";
+
+      if (value.length === 0) {
+        strength = "";
+        color = "inherit"; // Reset color
+      } else if (value.length < 8) { // Good practice: 8+ characters
+        strength = "Password is too short (min 8 characters)";
+        color = "red";
+      } else if (!/[A-Z]/.test(value) || !/[0-9]/.test(value) || !/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(value)) { // More comprehensive special characters
+        strength = "Needs uppercase, number & special character";
+        color = "orange";
+      } else {
+        strength = "Strong password";
+        color = "green";
+      }
+
+      strengthText.textContent = strength;
+      strengthText.style.color = color;
+    });
+  }
+
+  function togglePassword() {
+    // Dynamically find password fields if their IDs might vary
+    // Standard Django UserCreationForm fields are 'id_password1' and 'id_password2'
+    // but your current code uses 'id_password' and 'id_confirm_password'
+    // Let's use the IDs provided in your original JS:
+    const pass1 = document.getElementById("id_password");
+    const pass2 = document.getElementById("id_confirm_password"); // Assuming this is your confirm password field ID
+
+    if (pass1) { // Check if the first password field exists
+      const type = pass1.type === "password" ? "text" : "password";
+      pass1.type = type;
+      if (pass2) { // Only toggle the second one if it exists
+        pass2.type = type;
+      }
+    }
+  }
+
+  // Button loading state JavaScript
+  document.getElementById('registerForm').addEventListener('submit', function() {
+    const registerButton = document.getElementById('registerButton');
+    registerButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Registering...';
+    registerButton.disabled = true;
+  });
+</script>
+{% endblock %}

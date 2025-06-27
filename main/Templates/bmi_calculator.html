@@ -1,0 +1,277 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block extra_head %}
+    <script src="https://tailwindcss.com/docs/installation"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        .needle-tip {
+            border-l-[6px] border-l-transparent;
+            border-r-[6px] border-r-transparent;
+            border-b-[80px] border-b-gray-800;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+
+<div class="card shadow p-4">
+    <div class="text-center pb-4">
+      <h1 class="mb-4 text-3xl font-bold">BMI Calculator</h1>
+    </div>
+    <form method="post" class="row g-3" id="bmiForm">
+        {% csrf_token %}
+
+        <div class="col-md-6">
+            <label class="form-label">⚖️ Choose Unit Method:</label>
+            <div class="form-check">
+                <input type="radio" name="unit" id="unit_kg" value="kg" class="form-check-input" onchange="toggleHeightInput(); convertWeight();" {% if unit == 'kg' %}checked{% endif %} required>
+                <label for="unit_kg" class="form-check-label">Kilograms (cm)</label>
+            </div>
+            <div class="form-check">
+                <input type="radio" name="unit" id="unit_lbs" value="lbs" class="form-check-input" onchange="toggleHeightInput(); convertWeight();" {% if unit == 'lbs' %}checked{% endif %} required>
+                <label for="unit_lbs" class="form-check-label">Pounds (ft/inch)</label>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <label class="form-label">🚻 Gender:</label>
+            <select name="gender" class="form-select" required>
+                <option value="male" {% if gender == 'male' %}selected{% endif %}>Male</option>
+                <option value="female" {% if gender == 'female' %}selected{% endif %}>Female</option>
+            </select>
+        </div>
+
+        <div class="col-md-6">
+            <label class="form-label">🎂 Age:</label>
+            <input type="number" name="age" value="{{ age }}" min="1" class="form-control" placeholder="Enter your age" required>
+        </div>
+
+        <div class="col-md-6">
+            <label class="form-label">🏋️ Weight:</label>
+            <input type="number" name="weight" value="{{ weight }}" step="0.1" min="0.1" class="form-control" placeholder="Enter your weight" oninput="convertWeight()" id="weightInput" required>
+            <small id="weightConversion" class="text-muted d-block mt-1"></small>
+        </div>
+
+        <div class="col-md-6" id="height_cm">
+            <label class="form-label">📏 Height (cm):</label>
+            <input type="number" name="height_cm" value="{{ height_cm }}" step="0.1" class="form-control" placeholder="Enter height in cm" oninput="convertHeightFromCm()" id="heightCmInput">
+            <small id="heightFromCmConversion" class="text-muted d-block mt-1"></small>
+        </div>
+
+        <div class="col-md-3 d-none" id="height_ft">
+            <label class="form-label">Height (ft):</label>
+            <input type="number" name="height_ft" value="{{ height_ft }}" step="1" class="form-control" placeholder="Enter height in feet" oninput="convertHeightFromFtIn()" id="heightFtInput">
+        </div>
+        <div class="col-md-3 d-none" id="height_in">
+            <label class="form-label">📐 Height (in):</label>
+            <input type="number" name="height_in" value="{{ height_in }}" step="1" class="form-control" placeholder="Enter height in inches" oninput="convertHeightFromFtIn()" id="heightInInput">
+            <small id="heightFromFtConversion" class="text-muted d-block mt-1"></small>
+        </div>
+
+        <div class="col-12">
+            <button type="submit" class="btn btn-primary">🧮 Calculate BMI</button>
+        </div>
+    </form>
+
+    {% if bmi %}
+        <div class="alert alert-info mt-4">
+            <h5>Your BMI: <strong>{{ bmi }}</strong></h5>
+            <p>Status: <strong>{{ status }}</strong></p>
+            <p>💡 Health Tips: {{ suggestion }}</p>
+        </div>
+    {% endif %}
+</div>
+
+<div class="card shadow p-4 mt-4">
+    <h4 class="mb-3">📊 BMI Category Table</h4>
+    <table class="table table-bordered text-center">
+        <thead>
+            <tr>
+                <th>Category</th>
+                <th>BMI Range</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr><td>Underweight</td><td>Less than 18.5</td></tr>
+            <tr><td>Normal</td><td>18.5 – 24.9</td></tr>
+            <tr><td>Overweight</td><td>25 – 29.9</td></tr>
+            <tr><td>Obese</td><td>30 or greater</td></tr>
+        </tbody>
+    </table>
+</div>
+
+<div class="card shadow p-4 mt-4">
+    <h4 class="mb-3">📖 About BMI</h4>
+    <p>Body Mass Index (BMI) is a person's weight in kilograms divided by the square of height in meters. It is used to broadly categorize a person as underweight, normal weight, overweight, or obese based on tissue mass (muscle, fat, and bone). While it's a quick and easy screening tool, it doesn't directly assess body fat or health.</p>
+
+    <div class="bg-white p-8 rounded-xl shadow-2xl w-full max-w-md mx-auto mt-3">
+        <div class="relative w-80 h-40 rounded-t-full bg-gradient-to-r from-gray-300 to-gray-400 mx-auto overflow-hidden shadow-inner">
+            <div class="absolute bottom-0 left-1/2 -translate-x-1/2 w-4 h-4 bg-gray-800 rounded-full z-10"></div>
+
+            <div id="gaugeNeedle"
+                 class="absolute bottom-0 left-1/2 -translate-x-1/2 w-1.5 h-full transform-gpu origin-bottom z-10
+                         transition-transform duration-500 ease-in-out"
+                 style="transform: rotate(0deg);">
+                <div class="absolute top-0 left-1/2 -translate-x-1/2 w-0 h-0
+                             border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent
+                             border-b-[80px] border-b-gray-800"></div>
+            </div>
+
+            <div class="absolute bottom-4 left-1/2 -translate-x-1/2 text-4xl font-extrabold text-gray-900 z-20">
+                <span id="currentBmiValue">20.1</span>
+            </div>
+        </div>
+
+        <div class="mt-8 text-center">
+            <h2 class="text-2xl font-semibold text-gray-800 mb-4">Your BMI Category:</h2>
+            <div id="bmiCategory" class="text-3xl font-bold p-3 rounded-lg inline-block shadow-md">
+                Normal Weight
+            </div>
+
+            <div class="mt-6 grid grid-cols-2 gap-4 text-sm font-medium">
+                <div class="flex items-center justify-center p-2 rounded-md bg-red-100 text-red-700 shadow-sm">
+                    Underweight: &lt; 18.5
+                </div>
+                <div class="flex items-center justify-center p-2 rounded-md bg-green-100 text-green-700 shadow-sm">
+                    Normal Weight: 18.5 - 24.9
+                </div>
+                <div class="flex items-center justify-center p-2 rounded-md bg-yellow-100 text-yellow-700 shadow-sm">
+                    Overweight: 25.0 - 29.9
+                </div>
+                <div class="flex items-center justify-center p-2 rounded-md bg-orange-100 text-orange-700 shadow-sm">
+                    Obesity: &ge; 30.0
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function toggleHeightInput() {
+        const kg = document.getElementById('unit_kg');
+        const lbs = document.getElementById('unit_lbs');
+        const cm = document.getElementById('height_cm');
+        const ft = document.getElementById('height_ft');
+        const inch = document.getElementById('height_in');
+
+        if (kg.checked) {
+            cm.classList.remove('d-none');
+            ft.classList.add('d-none');
+            inch.classList.add('d-none');
+        } else {
+            cm.classList.add('d-none');
+            ft.classList.remove('d-none');
+            inch.classList.remove('d-none');
+        }
+    }
+
+    function convertWeight() {
+        const unit = document.querySelector('input[name="unit"]:checked')?.value;
+        const weightInput = document.getElementById('weightInput').value;
+        const display = document.getElementById('weightConversion');
+
+        const weight = parseFloat(weightInput);
+        if (!isNaN(weight)) {
+            if (unit === 'kg') {
+                const pounds = (weight * 2.20462).toFixed(1);
+                display.textContent = `≈ ${pounds} lbs`;
+            } else if (unit === 'lbs') {
+                const kg = (weight * 0.453592).toFixed(1);
+                display.textContent = `≈ ${kg} kg`;
+            } else {
+                display.textContent = '';
+            }
+        } else {
+            display.textContent = '';
+        }
+    }
+
+    function convertHeightFromCm() {
+        const heightCm = parseFloat(document.getElementById('heightCmInput').value);
+        const display = document.getElementById('heightFromCmConversion');
+        if (!isNaN(heightCm)) {
+            const totalInches = heightCm / 2.54;
+            const ft = Math.floor(totalInches / 12);
+            const inch = Math.round(totalInches % 12);
+            display.textContent = `≈ ${ft} ft ${inch} in`;
+        } else {
+            display.textContent = '';
+        }
+    }
+
+    function convertHeightFromFtIn() {
+        const ft = parseFloat(document.getElementById('heightFtInput').value) || 0;
+        const inch = parseFloat(document.getElementById('heightInInput').value) || 0;
+        const display = document.getElementById('heightFromFtConversion');
+        const totalInches = (ft * 12) + inch;
+        const cm = (totalInches * 2.54).toFixed(1);
+        if (totalInches > 0) {
+            display.textContent = `≈ ${cm} cm`;
+        } else {
+            display.textContent = '';
+        }
+    }
+
+    function updateGauge(bmi) {
+        const gaugeNeedle = document.getElementById('gaugeNeedle');
+        const currentBmiValueSpan = document.getElementById('currentBmiValue');
+        const bmiCategoryDiv = document.getElementById('bmiCategory');
+
+        const minBmiDisplay = 10;
+        const maxBmiDisplay = 45;
+        const clampedBmi = Math.max(minBmiDisplay, Math.min(maxBmiDisplay, bmi));
+
+        const range = maxBmiDisplay - minBmiDisplay;
+        const degreesPerUnit = 180 / range;
+        let rotationAngle = (clampedBmi - minBmiDisplay) * degreesPerUnit - 90;
+
+        gaugeNeedle.style.transform = `rotate(${rotationAngle}deg)`;
+        currentBmiValueSpan.textContent = bmi.toFixed(1);
+
+        let categoryText = '';
+        let categoryBgClass = '';
+        let categoryTextColorClass = '';
+
+        if (bmi < 18.5) {
+            categoryText = 'Underweight';
+            categoryBgClass = 'bg-red-500';
+            categoryTextColorClass = 'text-white';
+        } else if (bmi >= 18.5 && bmi < 25) {
+            categoryText = 'Normal Weight';
+            categoryBgClass = 'bg-green-500';
+            categoryTextColorClass = 'text-white';
+        } else if (bmi >= 25 && bmi < 30) {
+            categoryText = 'Overweight';
+            categoryBgClass = 'bg-yellow-500';
+            categoryTextColorClass = 'text-gray-900';
+        } else {
+            categoryText = 'Obesity';
+            categoryBgClass = 'bg-orange-600';
+            categoryTextColorClass = 'text-white';
+        }
+
+        bmiCategoryDiv.textContent = categoryText;
+        bmiCategoryDiv.className = 'text-3xl font-bold p-3 rounded-lg inline-block shadow-md ' + categoryBgClass + ' ' + categoryTextColorClass;
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        toggleHeightInput();
+        convertWeight();
+        convertHeightFromCm();
+        convertHeightFromFtIn();
+
+        const initialBmi = parseFloat("{{ bmi|default:'20.1' }}");
+        if (!isNaN(initialBmi)) {
+            updateGauge(initialBmi);
+        } else {
+            updateGauge(20.1);
+        }
+    });
+</script>
+
+{% endblock %}

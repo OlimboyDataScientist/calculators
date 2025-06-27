@@ -1,0 +1,167 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block extra_head %}
+    <!-- Tailwind CSS CDN is already included in base.html via the extra_head block -->
+    <style>
+        /* Custom font import for 'Inter' if not already globally defined in base.html body */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* Custom styles for gradients and more vibrant elements */
+        .btn-vibrant-gradient {
+            background-image: linear-gradient(to right, #6366f1, #8b5cf6); /* Indigo to Purple */
+        }
+        .btn-vibrant-gradient:hover {
+            background-image: linear-gradient(to right, #4f46e5, #7c3aed); /* Darker shades on hover */
+        }
+        .input-colorful-focus:focus {
+            border-color: #6366f1; /* Indigo */
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.5); /* Matching indigo ring */
+        }
+        /* Specific styling for select dropdowns to match input styles */
+        select.form-control {
+            appearance: none; /* Remove default arrow on some browsers */
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23333' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 0.75rem center;
+            background-size: 16px 12px;
+        }
+    </style>
+{% endblock extra_head %}
+
+{% block content %}
+<div class="flex flex-col items-center justify-center min-h-[calc(100vh-100px)] p-4">
+    <div class="bg-white p-10 rounded-xl shadow-2xl w-full max-w-4xl my-8">
+        <h2 class="text-3xl font-extrabold text-center text-gray-800 mb-8">💱 Currency Converter</h2>
+        
+        <form method="post" class="grid grid-cols-1 md:grid-cols-2 gap-8"> {# Adjusted grid layout #}
+            {% csrf_token %}
+
+            <div class="col-span-1">
+                <label for="amount" class="block text-gray-700 text-lg font-medium mb-3">💰 Amount:</label>
+                <input type="number" class="w-full p-2 border-2 border-blue-300 rounded-lg text-lg font-semibold text-blue-800
+                                       focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200 ease-in-out
+                                       input-colorful-focus"
+                       name="amount" id="amount" value="{{ request.POST.amount }}" placeholder="Enter amount" required>
+            </div>
+
+            <div class="col-span-1">
+                <label for="from_currency" class="block text-gray-700 text-lg font-medium mb-3">🌐 From Currency:</label>
+                <select class="w-full p-2 border-2 border-blue-300 rounded-lg text-lg font-semibold text-blue-800
+                               focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200 ease-in-out
+                               input-colorful-focus form-control" {# Kept form-control for base bootstrap styles, but apply Tailwind over it #}
+                        name="from_currency" id="from_currency" required>
+                    <option value="" disabled selected>Choose currency</option>
+                    {% for currency in currencies %}
+                        <option value="{{ currency.code }}" {% if request.POST.from_currency == currency.code %}selected{% endif %}>
+                            {{ currency.code }} - {{ currency.name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="col-span-full"> {# Span full width for this section #}
+                <label for="to_currency" class="block text-gray-700 text-lg font-medium mb-3">🎯 To Currency:</label>
+                <select class="w-full p-2 border-2 border-blue-300 rounded-lg text-lg font-semibold text-blue-800
+                               focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200 ease-in-out
+                               input-colorful-focus form-control" {# Kept form-control for base bootstrap styles, but apply Tailwind over it #}
+                        name="to_currency" id="to_currency" required>
+                    <option value="" disabled selected>Choose currency</option>
+                    {% for currency in currencies %}
+                        <option value="{{ currency.code }}" {% if request.POST.to_currency == currency.code %}selected{% endif %}>
+                            {{ currency.code }} - {{ currency.name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="col-span-full flex justify-center mt-6">
+                <button type="submit"
+                        class="px-10 py-4 text-white font-bold rounded-full shadow-lg
+                               hover:scale-105 hover:shadow-xl focus:outline-none focus:ring-4 focus:ring-blue-400
+                               transition duration-300 ease-in-out transform btn-vibrant-gradient">
+                               🚀 Convert
+                </button>
+            </div>
+        </form>
+
+        {% if result %}
+            <div class="mt-12 text-center p-6 rounded-lg bg-green-100 border-green-300 border shadow-md">
+                <h4 class="text-xl font-bold text-green-800 mb-3">💵 Converted Amount:</h4>
+                <p class="text-4xl font-extrabold text-green-900">{{ result }}</p>
+            </div>
+        {% endif %}
+
+        {% if error_message %}
+            <div class="mt-12 text-center p-6 rounded-lg bg-red-100 border-red-300 border shadow-md text-red-800">
+                <p class="text-xl font-bold">{{ error_message }}</p>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- New Description Section for Currency Conversion -->
+    <div class="mt-12 bg-white py-8 px-10 rounded-xl shadow-2xl w-full max-w-4xl text-gray-700 mb-8">
+        <h3 class="text-2xl font-semibold text-gray-800 mb-4 text-center">🧠 Understanding Currency Conversion</h3>
+        <p class="mb-4">
+            A currency converter allows you to quickly find the equivalent value of one currency in another. This is essential for international trade, travel, and financial transactions.
+        </p>
+        <p class="mb-4">
+            The conversion is based on current exchange rates, which fluctuate due to various economic and geopolitical factors. When you convert an amount, you are essentially multiplying your starting amount by the exchange rate between the "from" currency and the "to" currency.
+        </p>
+        <p>
+            For example, if the exchange rate from USD to EUR is 0.92, then 100 USD would convert to 92 EUR. Our calculator uses real-time or near real-time rates to provide you with the most accurate conversion possible.
+        </p>
+    </div>
+</div>
+
+<!-- Flag script to show flags beside dropdown (optional) -->
+<script>
+    const currencyData = JSON.parse('{{ currencies|safe|escapejs }}');
+
+    function addFlagsToDropdowns() {
+        const selects = document.querySelectorAll('select[name="from_currency"], select[name="to_currency"]');
+        selects.forEach(select => {
+            // Clear existing options to rebuild with flags
+            select.innerHTML = '';
+            
+            // Add default "Select" option
+            const defaultOption = document.createElement('option');
+            defaultOption.value = '';
+            defaultOption.textContent = '-- Select --';
+            select.appendChild(defaultOption);
+
+            currencyData.forEach(currency => {
+                const option = document.createElement('option');
+                option.value = currency.code;
+                // Corrected template literal for text content
+                option.textContent = `${currency.code} - ${currency.name}`; 
+
+                // Attempt to add flag, but note browser inconsistencies for <option> background-image
+                const flagCode = currency.country_code ? currency.country_code.toLowerCase() : '';
+                if (flagCode) {
+                    // This styling on <option> elements is known to be inconsistent across browsers.
+                    // For reliable flag display within a select, a custom JavaScript-driven dropdown
+                    // (like those found in UI libraries) is generally required.
+                    option.style.backgroundImage = `url('https://flagcdn.com/20x15/${flagCode}.png')`;
+                    option.style.backgroundRepeat = "no-repeat";
+                    option.style.backgroundPosition = "left center";
+                    option.style.paddingLeft = "25px"; // Make space for the flag
+                }
+                
+                // Set selected state based on Django's request.POST
+                const selectedCode = select.name === 'from_currency' ? '{{ request.POST.from_currency }}' : '{{ request.POST.to_currency }}';
+                if (currency.code === selectedCode) {
+                    option.selected = true;
+                }
+
+                select.appendChild(option);
+            });
+        });
+    }
+
+    document.addEventListener("DOMContentLoaded", addFlagsToDropdowns);
+</script>
+{% endblock %}

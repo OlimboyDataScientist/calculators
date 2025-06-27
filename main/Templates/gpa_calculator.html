@@ -1,0 +1,359 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load my_filters %} {# Make sure you have this line and my_filters.py set up! #}
+
+{% block title %}GPA Tool{% endblock %}
+
+{% block extra_head %}
+    {{ block.super }}
+    <style>
+        /* Ensure Tailwind's hidden class works reliably, overriding any other defaults */
+        .hidden {
+            display: none !important;
+        }
+
+        .grade-row {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 0.75rem;
+            align-items: center;
+        }
+        .grade-row input, .grade-row select {
+            flex: 1;
+            padding: 0.375rem 0.75rem;
+            font-size: 1rem;
+            line-height: 1.5;
+            border: 1px solid #ced4da;
+            border-radius: 0.25rem;
+        }
+        .grade-row .remove-btn {
+            flex-shrink: 0;
+        }
+        /* Style for the active tab/button */
+        .tab-btn.active {
+            background-color: #0d6efd; /* Bootstrap primary blue */
+            color: white;
+            border-color: #0d6efd;
+        }
+        .tab-btn {
+            transition: all 0.3s ease; /* Smooth transition for tab buttons */
+        }
+
+        /* General section styling for both tabs */
+        .gpa-section {
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+            border: 1px solid #e9ecef;
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+            margin-top: 1.5rem; /* Space from tabs */
+        }
+        /* Specific styling for Calculate GPA section */
+        #calculateGpaSection {
+            background-color: #fff; /* White background */
+        }
+        /* Specific styling for Convert GPA section */
+        #convertGpaSection {
+            background-color: #f8f9fa; /* Light grey/blueish background */
+        }
+
+        /* Enhanced alert styles */
+        .alert-info {
+            border: 1px solid #0dcaf0;
+            background-color: #e0f7fa;
+            color: #0dcaf0;
+        }
+        .alert-success {
+            border: 1px solid #198754;
+            background-color: #d1e7dd;
+            color: #198754;
+        }
+        .alert-danger {
+            border: 1px solid #dc3545;
+            background-color: #f8d7da;
+            color: #dc3545;
+        }
+        .alert-secondary {
+            border: 1px solid #6c757d;
+            background-color: #e2e3e5;
+            color: #6c757d;
+        }
+
+        /* Basic animations (define keyframes in your CSS or Tailwind config if not already present) */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .animate-fade-in {
+            animation: fadeIn 0.5s ease-out forwards;
+        }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+            20%, 40%, 60%, 80% { transform: translateX(5px); }
+        }
+        .animate-shake {
+            animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+
+<div class="card shadow p-4">
+    <div class="text-center pb-4">
+        <h1 class="mb-4 text-3xl font-bold text-gray-800">GPA Tool</h1>
+        <p class="text-gray-600">Choose your mode: Calculate GPA from grades or Convert GPA between scales.</p>
+    </div>
+
+    <div class="d-flex justify-content-center mb-4">
+        {# Remove the 'active' class here. JS will set it. #}
+        <button class="btn btn-outline-primary tab-btn me-2" data-target="calculateGpaSection">Calculate GPA</button>
+        <button class="btn btn-outline-primary tab-btn" data-target="convertGpaSection">Convert Scale</button>
+    </div>
+
+    <div id="calculateGpaSection" class="gpa-section">
+        <h2 class="text-2xl font-semibold mb-3 text-gray-800">Calculate Your GPA</h2>
+        <form method="post" id="gpaCalculationForm">
+            {% csrf_token %}
+            <input type="hidden" name="mode" value="calculate">
+
+            <div id="courseInputs" class="mb-4">
+                {# Loop to repopulate existing course rows if request_post exists #}
+                {% if request.POST.grades %}
+                    {% for grade_val in request.POST.grades %}
+                        <div class="grade-row">
+                            <input type="text" name="course_name[]" class="form-control" placeholder="Course Name (Optional)"
+                                   value="{{ request.POST.course_name|index:forloop.counter0|default_if_none:'' }}">
+                            <select name="grades[]" class="form-select" required>
+                                <option value="">Select Grade</option>
+                                <option value="A+" {% if grade_val == 'A+' %}selected{% endif %}>A+</option>
+                                <option value="A" {% if grade_val == 'A' %}selected{% endif %}>A</option>
+                                <option value="A-" {% if grade_val == 'A-' %}selected{% endif %}>A-</option>
+                                <option value="B+" {% if grade_val == 'B+' %}selected{% endif %}>B+</option>
+                                <option value="B" {% if grade_val == 'B' %}selected{% endif %}>B</option>
+                                <option value="B-" {% if grade_val == 'B-' %}selected{% endif %}>B-</option>
+                                <option value="C+" {% if grade_val == 'C+' %}selected{% endif %}>C+</option>
+                                <option value="C" {% if grade_val == 'C' %}selected{% endif %}>C</option>
+                                <option value="C-" {% if grade_val == 'C-' %}selected{% endif %}>C-</option>
+                                <option value="D+" {% if grade_val == 'D+' %}selected{% endif %}>D+</option>
+                                <option value="D" {% if grade_val == 'D' %}selected{% endif %}>D</option>
+                                <option value="F" {% if grade_val == 'F' %}selected{% endif %}>F</option>
+                            </select>
+                            <input type="number" name="credits[]" class="form-control" placeholder="Credits" step="0.1" min="0.1" required
+                                   value="{{ request.POST.credits|index:forloop.counter0|default_if_none:'' }}">
+                            {# No onclick here, event listener will handle it #}
+                            <button type="button" class="btn btn-danger remove-btn">Remove</button>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    {# Default first row if no data in request.POST #}
+                    <div class="grade-row">
+                        <input type="text" name="course_name[]" class="form-control" placeholder="Course Name (Optional)">
+                        <select name="grades[]" class="form-select" required>
+                            <option value="">Select Grade</option>
+                            <option value="A+">A+</option><option value="A">A</option><option value="A-">A-</option>
+                            <option value="B+">B+</option><option value="B">B</option><option value="B-">B-</option>
+                            <option value="C+">C+</option><option value="C">C</option><option value="C-">C-</option>
+                            <option value="D+">D+</option><option value="D">D</option><option value="F">F</option>
+                        </select>
+                        <input type="number" name="credits[]" class="form-control" placeholder="Credits" step="0.1" min="0.1" required>
+                        {# No onclick here, event listener will handle it #}
+                        <button type="button" class="btn btn-danger remove-btn">Remove</button>
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="d-grid gap-2 mb-4">
+                {# Changed to id for addEventListener #}
+                <button type="button" class="btn btn-secondary" id="addCourseBtn">Add Course</button>
+                <button type="submit" class="btn btn-primary">Calculate GPA</button>
+            </div>
+        </form>
+    </div>
+
+    <div id="convertGpaSection" class="gpa-section hidden">
+        <h2 class="text-2xl font-semibold mb-3 text-gray-800">Convert GPA Scale</h2>
+        <form method="post" id="gpaConversionForm">
+            {% csrf_token %}
+            <input type="hidden" name="mode" value="convert">
+
+            <div class="mb-3">
+                <label for="current_gpa" class="form-label">Current GPA</label>
+                <input type="number" name="current_gpa" id="current_gpa" class="form-control" step="0.01" required
+                       value="{{ request.POST.current_gpa|default_if_none:'' }}"> {# Preserve value #}
+            </div>
+
+            <div class="mb-3">
+                <label for="current_scale" class="form-label">Current Scale</label>
+                <select name="current_scale" id="current_scale" class="form-select" required>
+                    <option value="">Select Current Scale</option>
+                    {# Assuming you pass a list of (value, display_name) for scale_options from your view #}
+                    {% for scale_key, scale_display in scale_options %}
+                        <option value="{{ scale_key }}" {% if request.POST.current_scale == scale_key %}selected{% endif %}>
+                            {{ scale_display }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="mb-4">
+                <label for="target_scale" class="form-label">Target Scale</label>
+                <select name="target_scale" id="target_scale" class="form-select" required>
+                    <option value="">Select Target Scale</option>
+                    {# Assuming you pass a list of (value, display_name) for scale_options from your view #}
+                    {% for scale_key, scale_display in scale_options %}
+                        <option value="{{ scale_key }}" {% if request.POST.target_scale == scale_key %}selected{% endif %}>
+                            {{ scale_display }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="d-grid gap-2">
+                <button type="submit" class="btn btn-primary">Convert GPA</button>
+            </div>
+        </form>
+    </div>
+
+    <div id="gpaResult" class="mt-4 text-center">
+        {% if gpa is not None and request.POST.mode == 'calculate' %}
+            <div class="alert alert-info animate-fade-in">
+                <h5 class="text-2xl font-bold">Your Calculated GPA: <strong class="text-blue-700">{{ gpa }}</strong></h5>
+            </div>
+        {% elif converted_gpa is not None and request.POST.mode == 'convert' %}
+            <div class="alert alert-success animate-fade-in">
+                <h5 class="text-2xl font-bold">Converted GPA: <strong class="text-green-700">{{ converted_gpa }}</strong></h5>
+            </div>
+        {% elif error_message %}
+            <div class="alert alert-danger animate-shake">
+                <h5 class="text-red-700">{{ error_message }}</h5>
+            </div>
+        {% else %}
+            {# Only show this if there's no result or error message #}
+            <div class="alert alert-secondary">
+                <h5 class="text-gray-700">No results available. Please complete the form and submit.</h5>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const courseInputsDiv = document.getElementById('courseInputs');
+        const addCourseBtn = document.getElementById('addCourseBtn');
+        const tabButtons = document.querySelectorAll('.tab-btn');
+        const gpaSections = document.querySelectorAll('.gpa-section');
+        const gpaResultDiv = document.getElementById('gpaResult');
+
+        // Function to add a course row
+        function addCourse() {
+            const newRow = document.createElement('div');
+            newRow.classList.add('grade-row');
+            newRow.innerHTML = `
+                <input type="text" name="course_name[]" class="form-control" placeholder="Course Name (Optional)">
+                <select name="grades[]" class="form-select" required>
+                    <option value="">Select Grade</option>
+                    <option value="A+">A+</option><option value="A">A</option><option value="A-">A-</option>
+                    <option value="B+">B+</option><option value="B">B</option><option value="B-">B-</option>
+                    <option value="C+">C+</option><option value="C">C</option><option value="C-">C-</option>
+                    <option value="D+">D+</option><option value="D">D</option>
+                    <option value="F">F</option>
+                </select>
+                <input type="number" name="credits[]" class="form-control" placeholder="Credits" step="0.1" min="0.1" required>
+                <button type="button" class="btn btn-danger remove-btn">Remove</button>
+            `;
+            courseInputsDiv.appendChild(newRow);
+            console.log('Course row added. Current children:', courseInputsDiv.children.length);
+        }
+
+        // Event delegation for "Remove" buttons
+        courseInputsDiv.addEventListener('click', function(event) {
+            // Check if the clicked element has the 'remove-btn' class
+            if (event.target.classList.contains('remove-btn')) {
+                const rowToRemove = event.target.closest('.grade-row');
+                console.log('Remove button clicked. Target row:', rowToRemove);
+                console.log('Current course inputs count before removal:', courseInputsDiv.children.length);
+
+                if (courseInputsDiv.children.length > 1) { // Ensure at least one row remains
+                    if (rowToRemove) {
+                        rowToRemove.remove();
+                        console.log('Row removed. New count:', courseInputsDiv.children.length);
+                    } else {
+                        console.error('Could not find .grade-row to remove for button:', event.target);
+                    }
+                } else {
+                    alert("You must have at least one course to calculate GPA.");
+                    console.log('Removal prevented: Only one course remaining.');
+                }
+            }
+        });
+
+        // Event listener for "Add Course" button
+        addCourseBtn.addEventListener('click', addCourse);
+
+        // Initialize with one course if empty on load (only if not repopulating from request.POST)
+        // This check is important so it doesn't add an extra row when form data is sticky
+        if (courseInputsDiv.children.length === 0) {
+            addCourse();
+        }
+
+        // --- JavaScript for Mode Selection Tabs ---
+        tabButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                console.log('Tab button clicked:', this.dataset.target);
+                // Remove active class from all buttons
+                tabButtons.forEach(btn => btn.classList.remove('active'));
+                // Add active class to the clicked button
+                this.classList.add('active');
+
+                // Hide all sections
+                gpaSections.forEach(section => section.classList.add('hidden'));
+                // Show the target section
+                const targetId = this.dataset.target;
+                const targetSection = document.getElementById(targetId);
+                if (targetSection) {
+                    targetSection.classList.remove('hidden');
+                    console.log('Section shown:', targetId);
+                } else {
+                    console.error('Target section not found:', targetId);
+                }
+
+                // Clear results when switching tabs, unless a result is already displayed for the *current* mode
+                // This is a subtle optimization to keep the result if you're just switching between modes
+                // that have already calculated a result for this submission
+                const currentModeInResult = gpaResultDiv.querySelector('.alert-info') ? 'calculate' :
+                                            gpaResultDiv.querySelector('.alert-success') ? 'convert' : null;
+
+                // Only clear if the tab being switched to doesn't match the current displayed result's mode,
+                // or if there's an error message.
+                if (targetId.includes(currentModeInResult === 'calculate' ? 'convert' : 'calculate') || gpaResultDiv.querySelector('.alert-danger')) {
+                     gpaResultDiv.innerHTML = `
+                         <div class="alert alert-secondary">
+                             <h5 class="text-gray-700">No results available. Please complete the form and submit.</h5>
+                         </div>`;
+                     console.log('Result cleared due to tab switch.');
+                }
+            });
+        });
+
+        // Initial tab activation based on backend context (request.POST.mode)
+        // This ensures the correct tab is active after a form submission/page reload
+        const initialMode = "{{ request.POST.mode|default:'calculate' }}"; // Default to 'calculate' if no POST data
+        console.log('Initial mode from Django (request.POST.mode):', initialMode);
+        let targetButton;
+
+        if (initialMode === 'convert') {
+            targetButton = document.querySelector('.tab-btn[data-target="convertGpaSection"]');
+        } else {
+            targetButton = document.querySelector('.tab-btn[data-target="calculateGpaSection"]');
+        }
+
+        if (targetButton) {
+            console.log('Attempting to click initial target button:', targetButton.dataset.target);
+            targetButton.click(); // Programmatically click the correct button
+        } else {
+            console.error('Initial target button not found for mode:', initialMode);
+        }
+    });
+</script>
+{% endblock %}

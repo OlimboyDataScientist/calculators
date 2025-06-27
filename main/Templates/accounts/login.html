@@ -1,0 +1,119 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-5">
+  <div class="row justify-content-center">
+    <div class="col-md-6 col-lg-5"> {# Adjust column size for a narrower, centered form #}
+      <div class="card shadow-lg p-4 p-md-5"> {# Added shadow and more padding #}
+        <div class="card-body">
+          <h2 class="card-title text-center mb-4">
+            <i class="bi bi-box-arrow-in-right me-2 text-primary"></i> Login
+          </h2>
+          <p class="card-text text-center text-muted mb-4">
+            Access your account to continue.
+          </p>
+
+          {# Display non-field errors (e.g., invalid credentials) #}
+          {% if form.non_field_errors %} {# Assuming you're passing a Django form context #}
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+              {% for error in form.non_field_errors %}
+                <p class="mb-0">{{ error }}</p>
+              {% endfor %}
+              <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+          {% elif messages %} {# For general Django messages framework #}
+             {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+          {% endif %}
+
+          <form method="post" id="loginForm">
+            {% csrf_token %}
+
+            {# If you are passing a Django AuthenticationForm in context (recommended) #}
+            {% if form %}
+              {% for field in form %}
+                <div class="mb-3">
+                  <label for="{{ field.id_for_label }}" class="form-label visually-hidden">{{ field.label }}</label> {# Hide label visually but keep for accessibility #}
+                  <input
+                    type="{{ field.field.widget.input_type }}"
+                    class="form-control form-control-lg rounded-pill {% if field.errors %}is-invalid{% endif %}"
+                    id="{{ field.id_for_label }}"
+                    name="{{ field.name }}"
+                    placeholder="{% if field.name == 'username' %}Username{% elif field.name == 'password' %}Password{% else %}{{ field.label }}{% endif %}"
+                    value="{{ field.value|default_if_none:'' }}"
+                    {% if field.field.required %}required{% endif %}
+                    {% if field.name == 'username' %}autofocus{% endif %} {# Autofocus on username field #}
+                  />
+                  {% for error in field.errors %}
+                    <div class="invalid-feedback">{{ error }}</div>
+                  {% endfor %}
+                </div>
+              {% endfor %}
+            {% else %}
+            {# If you are using direct input fields (as in your original code) #}
+            <div class="mb-3">
+              <label for="usernameInput" class="form-label visually-hidden">Username</label>
+              <input
+                type="text"
+                id="usernameInput"
+                name="username"
+                placeholder="Username"
+                class="form-control form-control-lg rounded-pill"
+                required
+                autofocus
+              />
+            </div>
+            <div class="mb-4"> {# mb-4 for more space before button #}
+              <label for="passwordInput" class="form-label visually-hidden">Password</label>
+              <input
+                type="password"
+                id="passwordInput"
+                name="password"
+                placeholder="Password"
+                class="form-control form-control-lg rounded-pill"
+                required
+              />
+            </div>
+            {% endif %}
+
+            <div class="d-grid gap-2">
+              <button type="submit" class="btn btn-primary btn-lg mt-2" id="loginButton">
+                <i class="bi bi-door-open-fill me-2"></i> Login
+              </button>
+            </div>
+
+            <div class="text-center mt-3">
+              <a href="{% url 'password_reset' %}" class="text-muted text-decoration-none small">
+                <i class="bi bi-question-circle-fill me-1"></i> Forgot Password?
+              </a>
+              
+            </div>
+
+            <hr class="my-4"> {# A separator #}
+
+            <div class="text-center">
+              <p class="text-muted mb-2">Don't have an account?</p>
+                <a href="{% url 'register' %}" class="btn btn-outline-secondary btn-sm rounded-pill">Sign Up Now</a> {# Link to registration page #}
+            </div>
+
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Simple JavaScript to disable button on submit and show a loading spinner
+  document.getElementById('loginForm').addEventListener('submit', function() {
+    const loginButton = document.getElementById('loginButton');
+    loginButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Logging in...';
+    loginButton.disabled = true;
+  });
+</script>
+{% endblock %}

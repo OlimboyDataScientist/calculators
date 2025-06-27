@@ -1,0 +1,102 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block extra_head %}
+    <!-- Tailwind CSS CDN is already included in base.html via the extra_head block -->
+    <style>
+        /* Custom font import for 'Inter' if not already globally defined in base.html body */
+        /* If 'Inter' is already applied to the body in base.html, this block can be removed */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* Custom styles for gradients and more vibrant elements */
+        .card-colorful-bg {
+            background-image: linear-gradient(to right bottom, var(--tw-gradient-stops));
+            --tw-gradient-stops: #a78bfa, #8b5cf6, #6d28d9; /* Purple to Indigo */
+        }
+        .btn-vibrant-gradient {
+            background-image: linear-gradient(to right, #6366f1, #8b5cf6); /* Indigo to Purple */
+        }
+        .btn-vibrant-gradient:hover {
+            background-image: linear-gradient(to right, #4f46e5, #7c3aed); /* Darker shades on hover */
+        }
+        .input-colorful-focus:focus {
+            border-color: #6366f1; /* Indigo */
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.5); /* Matching indigo ring */
+        }
+    </style>
+{% endblock extra_head %}
+
+{% block content %}
+<div class="flex flex-col items-center justify-center min-h-[calc(100vh-100px)] p-4"> {# Adjust min-h to account for navbar/footer #}
+    <div class="bg-white p-10 rounded-xl shadow-2xl w-full max-w-5xl my-8">    {# Increased padding to p-10 for inner content space #}
+      <h2 class="text-3xl font-extrabold text-center text-gray-800 mb-8">🧮 Age Calculator</h2>
+
+      <form method="post" class="space-y-8">
+          {% csrf_token %}
+          <div class="mb-4 p-5">
+              <label for="dob" class="block text-gray-700 text-lg font-medium mb-3">📅 Enter Your Date of Birth:</label>
+              <input type="date" name="dob" id="dob" value="{{ dob }}"
+                     class="w-full p-4 border-2 border-blue-300 rounded-lg text-lg font-semibold text-blue-800
+                            focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200 ease-in-out
+                            input-colorful-focus">
+          </div>
+      
+          <div class="flex justify-center mb-20">
+              <button type="submit"
+                        class="px-6 py-3 text-white font-bold rounded-t-full rounded-b-full shadow-md hover:scale-105 hover:shadow-xl
+                           focus:outline-none focus:ring-4 focus:ring-blue-400 transition duration-300 ease-in-out
+                           btn-vibrant-gradient">
+                  🚀 Calculate Age
+              </button>
+          </div>
+      </form>
+      
+
+      {% if age %}
+
+      <div class="mt-12 text-center p-6 rounded-lg bg-green-100 border-green-300 border shadow-md">
+
+          <h5 class="text-xl font-bold text-green-800 mb-3">🎂 You are {{ age }} years old!</h5>
+      
+            <div class="mt-4 text-lg space-y-2 text-left">
+              <p>📆 <strong>Months:</strong> {{ total_months|default:"N/A" }} months</p>
+              <p>🗓️ <strong>Days:</strong> {{ total_days|default:"N/A" }} days</p>
+              <p>⏰ <strong>Hours:</strong> {{ total_hours|default:"N/A" }} hours</p>
+              <p>⏳ <strong>Minutes:</strong> {{ total_minutes|default:"N/A" }} minutes</p>
+              <p>🕒 <strong>Seconds:</strong> {{ total_seconds|default:"N/A" }} seconds</p>
+            </div>
+      
+          <p class="text-sm text-gray-600 mt-4">
+              🧠 <small><strong>Note:</strong> These values are estimates based on full intervals since your birth date.</small>
+          </p>
+          <div class="text-sm text-gray-600 mt-2">
+                Your time: <strong>{{ user_time|default:"N/A" }}</strong>
+            </div>
+        
+      </div>
+      {% endif %}
+      
+    </div>
+
+    {# Removed the "Explore More Calculators" section as requested #}
+
+    <!-- New Description Section for Age Counting and Calculation -->
+    <div class="mt-12 bg-white p-8 rounded-xl shadow-2xl w-full max-w-5xl text-gray-700 mb-8">
+      <h3 class="text-2xl font-semibold text-gray-800 mb-4 text-center">🧾 Understanding Age Calculation</h3>
+      <p class="mb-4">
+          🧮 An age calculator helps you find your exact age from your date of birth using the current date.
+      </p>
+      <p class="mb-4">
+          🎯 For example, if you were born on <strong>June 15, 1990</strong> and today is <strong>June 14, 2025</strong>, your age is <strong>34</strong>.
+          You’ll turn <strong>35</strong> the next day. Our calculator uses this method.
+      </p>
+      <p>
+          🎉 It's helpful for birthday planning, legal paperwork, or just satisfying your curiosity!
+      </p>
+  </div>
+  
+</div>
+{% endblock content %}

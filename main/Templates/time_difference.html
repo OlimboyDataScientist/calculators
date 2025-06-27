@@ -1,0 +1,291 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load my_filters %}
+
+
+{% block extra_head %}
+    {{ block.super }} {# This line is crucial! It includes content from the parent's extra_head block #}
+    <style>
+        /* Custom font import for 'Inter' if not already globally defined in base.html body */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* Custom styles for gradients and more vibrant elements */
+        .btn-vibrant-gradient {
+            background-image: linear-gradient(to right, #6366f1, #8b5cf6); /* Indigo to Purple */
+        }
+        .btn-vibrant-gradient:hover {
+            background-image: linear-gradient(to right, #4f46e5, #7c3aed); /* Darker shades on hover */
+        }
+        .input-colorful-focus:focus {
+            border-color: #6366f1; /* Indigo */
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.5); /* Matching indigo ring */
+        }
+
+        /* Styling for the custom select with search */
+        .custom-select-wrapper {
+            position: relative;
+        }
+
+        .custom-select-search {
+            width: 100%;
+            padding: 0.6rem; /* Reduced from 0.75rem */
+            border: 2px solid #a78bfa; /* Purple-300 */
+            border-radius: 0.5rem;
+            font-size: 1rem; /* text-base, reduced from text-lg */
+            font-weight: 600; /* font-semibold */
+            color: #4c1d95; /* Purple-900 */
+            background-color: #f5f3ff; /* Purple-50 */
+            outline: none;
+            transition: all 0.2s ease-in-out;
+        }
+
+        .custom-select-search:focus {
+            border-color: #6366f1; /* Indigo */
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.5); /* Matching indigo ring */
+        }
+
+        .custom-select-options {
+            position: absolute;
+            width: 100%;
+            max-height: 180px; /* Reduced from 200px */
+            overflow-y: auto;
+            background-color: white;
+            border: 1px solid #e0e7ff; /* Indigo-100 */
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            z-index: 10;
+            display: none; /* Hidden by default */
+            margin-top: 0.2rem; /* Reduced from 0.25rem */
+        }
+
+        .custom-select-options.active {
+            display: block;
+        }
+
+        .custom-select-option {
+            padding: 0.6rem; /* Reduced from 0.75rem */
+            font-size: 1rem; /* text-base, reduced from text-lg */
+            color: #312e81; /* Indigo-900 */
+            cursor: pointer;
+            transition: background-color 0.15s ease-in-out;
+        }
+
+        .custom-select-option:hover, .custom-select-option.selected {
+            background-color: #e0e7ff; /* Indigo-100 */
+        }
+    </style>
+{% endblock extra_head %}
+
+{% block content %}
+<div class="flex flex-col items-center justify-center min-h-[calc(100vh-100px)] p-3 bg-gradient-to-br from-blue-50 to-purple-100"> {# Reduced p-4 to p-3 #}
+    <div class="bg-white p-8 rounded-2xl shadow-3xl w-full max-w-xl my-8 border border-purple-200"> {# Reduced p-10 to p-8, max-w-3xl to max-w-xl, my-10 to my-8 #}
+        <h2 class="text-3xl font-extrabold text-center text-gray-900 mb-8 tracking-tight">⏱️ Global Time Difference Calculator</h2> {# Reduced text-4xl to text-3xl, mb-10 to mb-8 #}
+        
+        <form method="post" class="grid grid-cols-1 md:grid-cols-2 gap-8"> {# Reduced gap-10 to gap-8 #}
+            {% csrf_token %}
+            
+            <div class="col-span-1">
+                <label for="timezone1_search" class="block text-gray-800 text-lg font-semibold mb-3">🌍 Select Timezone 1:</label> {# Reduced text-xl to text-lg, mb-4 to mb-3 #}
+                <div class="custom-select-wrapper">
+                    <input type="text" id="timezone1_search" class="custom-select-search" placeholder="Search timezone..." autocomplete="off">
+                    <div id="timezone1_options" class="custom-select-options">
+                        {% for label, tz in timezone_dict.items %}
+                            <div class="custom-select-option" data-value="{{ tz }}">{{ label }}</div>
+                        {% endfor %}
+
+                    </div>
+                    <input type="hidden" name="timezone1" id="timezone1" value="{{ tz1|default:'' }}" required>
+                </div>
+            </div>
+
+            <div class="col-span-1">
+                <label for="timezone2_search" class="block text-gray-800 text-lg font-semibold mb-3">🌐 Select Timezone 2:</label> {# Reduced text-xl to text-lg, mb-4 to mb-3 #}
+                <div class="custom-select-wrapper">
+                    <input type="text" id="timezone2_search" class="custom-select-search" placeholder="Search timezone..." autocomplete="off">
+                    <div id="timezone2_options" class="custom-select-options">
+                        {% for label, tz in timezone_dict.items %}
+                            <div class="custom-select-option" data-value="{{ tz }}">{{ label }}</div>
+                        {% endfor %}
+
+
+                    </div>
+                    <input type="hidden" name="timezone2" id="timezone2" value="{{ tz2|default:'' }}" required>
+                </div>
+            </div>
+            
+            <div class="col-span-full flex justify-center mt-6"> {# Reduced mt-8 to mt-6 #}
+                <button type="submit"
+                        class="px-8 py-3 text-white font-bold text-lg rounded-full shadow-lg {# Reduced px-12 py-4 to px-8 py-3, text-xl to text-lg #}
+                               hover:scale-105 hover:shadow-xl focus:outline-none focus:ring-4 focus:ring-purple-400
+                               transition duration-300 ease-in-out transform btn-vibrant-gradient">
+                               ⏱️ Calculate Difference
+                </button>
+            </div>
+        </form>
+
+        {% if time1 and time2 %}
+            <div class="mt-10 text-center p-6 rounded-xl bg-gradient-to-r from-purple-50 to-indigo-50 border border-purple-300 shadow-lg"> {# Reduced mt-16 to mt-10, p-8 to p-6 #}
+                <h4 class="text-xl font-bold text-purple-900 mb-3">Current Times:</h4> {# Reduced text-2xl to text-xl, mb-4 to mb-3 #}
+                <p class="text-2xl font-extrabold text-purple-800 mb-2">
+                    <strong><span class="text-purple-600">🕓</span>
+                        {{ reverse_timezone_labels|get:tz1_selected }} <span class="text-sm text-gray-500">({{ tz1 }})</span>
+                    </strong>:
+                    <span class="font-extrabold text-indigo-700">{{ time1 }}</span>
+                </p>
+                <p class="text-2xl font-extrabold text-purple-800 mb-4">
+                    <strong><span class="text-purple-600">🕜</span>
+                        {{ reverse_timezone_labels|get:tz2_selected }} <span class="text-sm text-gray-500">({{ tz2 }})</span>
+                    </strong>:
+                    <span class="font-extrabold text-indigo-700">{{ time2 }}</span>
+                </p>
+                
+                
+
+                <div class="bg-purple-200 text-purple-900 font-extrabold py-3 px-4 rounded-lg border-2 border-purple-400 shadow-md"> {# Reduced py-4 px-6 to py-3 px-4 #}
+                    <h3 class="text-2xl">Time Difference: <strong class="text-3xl text-purple-800">⏳ {{ time_diff }} </strong></h3> {# Reduced text-3xl to text-2xl, text-4xl to text-3xl #}
+                </div>
+            </div>
+        {% endif %}
+    </div>
+
+    <div class="mt-10 bg-white py-8 px-10 rounded-2xl shadow-3xl w-full max-w-xl text-gray-700 mb-8 border border-blue-200"> {# Reduced mt-16 to mt-10, py-10 px-12 to py-8 px-10, max-w-3xl to max-w-xl, mb-10 to mb-8 #}
+        <h3 class="text-2xl font-bold text-gray-900 mb-4 text-center">🌍 Understanding Time Difference Calculation</h3> {# Reduced text-3xl to text-2xl, mb-6 to mb-4 #}
+        <p class="mb-4 leading-relaxed text-base"> {# Reduced text-lg to text-base, mb-5 to mb-4 #}
+            A **Time Difference Calculator** is an essential tool for anyone needing to coordinate across different geographical locations. It precisely determines the time gap between two chosen timezones, making it invaluable for various activities.
+        </p>
+        <p class="mb-4 leading-relaxed text-base"> {# Reduced text-lg to text-base, mb-5 to mb-4 #}
+            **Timezones** are regions that share a common standard time, typically expressed as an offset from **Coordinated Universal Time (UTC)**, such as UTC+1 or UTC-5. The core of the calculation involves comparing these precise offsets to find the exact difference.
+        </p>
+        <p class="leading-relaxed text-base"> {# Reduced text-lg to text-base #}
+            An important consideration is **Daylight Saving Time (DST)**, where certain regions adjust their clocks forward or backward seasonally. Our calculator intelligently accounts for these shifts, ensuring the time difference provided is always accurate and reliable, regardless of DST variations.
+        </p>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        function setupTimezoneSearch(searchInputId, optionsContainerId, hiddenInputId) {
+            const searchInput = document.getElementById(searchInputId);
+            const optionsContainer = document.getElementById(optionsContainerId);
+            const hiddenInput = document.getElementById(hiddenInputId);
+            const options = Array.from(optionsContainer.children); // Convert HTMLCollection to Array for easier filtering
+
+            // Set initial value for search input if a timezone was selected (e.g., after form submission)
+            if (hiddenInput.value) {
+                searchInput.value = hiddenInput.value;
+            }
+
+            searchInput.addEventListener('focus', function() {
+                optionsContainer.classList.add('active');
+                filterOptions(''); // Show all options on focus
+            });
+
+            searchInput.addEventListener('input', function() {
+                const searchTerm = searchInput.value.toLowerCase();
+                filterOptions(searchTerm);
+            });
+
+            function filterOptions(searchTerm) {
+                let foundMatch = false;
+                options.forEach(option => {
+                    const text = option.textContent.toLowerCase();
+                    if (text.includes(searchTerm)) {
+                        option.style.display = '';
+                        if (text === searchTerm) { // Auto-select if exact match found
+                            selectOption(option);
+                            foundMatch = true;
+                        }
+                    } else {
+                        option.style.display = 'none';
+                    }
+                });
+                if (!foundMatch && searchTerm.length > 0) {
+                    hiddenInput.value = ''; // Clear hidden input if no exact match
+                }
+                optionsContainer.classList.add('active'); // Keep options visible while typing
+            }
+
+            optionsContainer.addEventListener('click', function(event) {
+                if (event.target.classList.contains('custom-select-option')) {
+                    selectOption(event.target);
+                }
+            });
+
+            function selectOption(option) {
+                searchInput.value = option.textContent;
+                hiddenInput.value = option.dataset.value;
+                optionsContainer.classList.remove('active');
+                // Remove 'selected' class from previously selected option
+                const currentlySelected = optionsContainer.querySelector('.selected');
+                if (currentlySelected) {
+                    currentlySelected.classList.remove('selected');
+                }
+                // Add 'selected' class to the newly selected option
+                option.classList.add('selected');
+            }
+
+            // Close options when clicking outside
+            document.addEventListener('click', function(event) {
+                if (!searchInput.contains(event.target) && !optionsContainer.contains(event.target)) {
+                    optionsContainer.classList.remove('active');
+                }
+            });
+
+            // Handle keyboard navigation for accessibility
+            searchInput.addEventListener('keydown', function(event) {
+                const visibleOptions = options.filter(opt => opt.style.display !== 'none');
+                if (visibleOptions.length === 0) return;
+
+                let currentIndex = -1;
+                const currentSelected = optionsContainer.querySelector('.selected');
+                if (currentSelected) {
+                    currentIndex = visibleOptions.indexOf(currentSelected);
+                }
+
+                if (event.key === 'ArrowDown') {
+                    event.preventDefault();
+                    currentIndex = (currentIndex + 1) % visibleOptions.length;
+                    selectOption(visibleOptions[currentIndex]);
+                    optionsContainer.scrollTop = visibleOptions[currentIndex].offsetTop - optionsContainer.offsetTop;
+                } else if (event.key === 'ArrowUp') {
+                    event.preventDefault();
+                    currentIndex = (currentIndex - 1 + visibleOptions.length) % visibleOptions.length;
+                    selectOption(visibleOptions[currentIndex]);
+                    optionsContainer.scrollTop = visibleOptions[currentIndex].offsetTop - optionsContainer.offsetTop;
+                } else if (event.key === 'Enter') {
+                    event.preventDefault();
+                    if (currentSelected) {
+                        selectOption(currentSelected);
+                        searchInput.blur(); // Remove focus from search input
+                    }
+                }
+            });
+        }
+
+        setupTimezoneSearch('timezone1_search', 'timezone1_options', 'timezone1');
+        setupTimezoneSearch('timezone2_search', 'timezone2_options', 'timezone2');
+    });
+
+    // Set default timezone using browser info
+    document.addEventListener('DOMContentLoaded', function() {
+        const localTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+        // Find matching option and select it automatically in timezone1
+        const tz1Options = document.querySelectorAll('#timezone1_options .custom-select-option');
+        for (const opt of tz1Options) {
+            if (opt.dataset.value === localTz) {
+                opt.classList.add('selected');
+                document.getElementById('timezone1_search').value = opt.textContent;
+                document.getElementById('timezone1').value = opt.dataset.value;
+                break;
+            }
+        }
+
+        // Same can be done for timezone2 if needed
+    });
+
+</script>
+{% endblock content %}

@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="calculator-container">
+    <h2>Time Zone Converter</h2>
+    <form method="post">
+        {% csrf_token %}
+        <label for="from_timezone">From Time Zone:</label>
+        <select name="from_timezone" required>
+            {% for tz in timezones %}
+                <option value="{{ tz }}">{{ tz }}</option>
+            {% endfor %}
+        </select>
+
+        <label for="to_timezone">To Time Zone:</label>
+        <select name="to_timezone" required>
+            {% for tz in timezones %}
+                <option value="{{ tz }}">{{ tz }}</option>
+            {% endfor %}
+        </select>
+
+        <label for="datetime">Date and Time:</label>
+        <input type="datetime-local" name="datetime" required>
+
+        <button type="submit">Convert</button>
+    </form>
+
+    {% if converted_time %}
+        <p><strong>Converted Time:</strong> {{ converted_time }}</p>
+    {% endif %}
+</div>
+{% endblock %}

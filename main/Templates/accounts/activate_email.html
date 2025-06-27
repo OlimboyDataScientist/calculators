@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Reset Your Password</title>
+</head>
+<body style="font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 20px;">
+    <div style="background-color: #ffffff; max-width: 600px; margin: auto; padding: 30px; border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.1);">
+        <h2 style="color: #333333;">Hi {{ user.get_username }},</h2>
+        <p style="font-size: 16px; color: #555555;">
+            You requested to reset your password. Click the button below to choose a new one:
+        </p>
+
+        <div style="text-align: center; margin: 30px 0;">
+            <a href="{{ protocol }}://{{ domain }}{% url 'password_reset_confirm' uidb64=uid token=token %}"
+               style="background-color: #3b82f6; color: white; padding: 12px 24px; border-radius: 5px; text-decoration: none; font-weight: bold;">
+                Reset Password
+            </a>
+        </div>
+
+        <p style="font-size: 14px; color: #888888;">
+            If you didn’t request a password reset, you can safely ignore this email.
+        </p>
+
+        <p style="font-size: 14px; color: #888888;">Thanks,<br>The {{ site_name }} Team</p>
+    </div>
+</body>
+</html>

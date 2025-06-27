@@ -1,0 +1,97 @@
+{% extends 'base.html' %}
+{% block title %}Choose Calculator{% endblock %}
+
+{% block content %}
+
+<div class="relative min-h-screen bg-cover bg-center py-16 sm:py-24 lg:py-32" style="background-image: url('https://source.unsplash.com/random/1920x1080/?calculator,math');">
+    <div class="absolute inset-0 bg-black opacity-60"></div>
+    <div class="relative z-10 text-center mb-12">
+        <h2 class="text-4xl font-extrabold text-white mb-4">Explore Our Calculators</h2>
+        <p class="text-lg text-gray-300">Choose the perfect tool for your needs.</p>
+    </div>
+
+    <div class="relative z-10 flex flex-wrap justify-center gap-6 p-4">
+        {# BMI Calculator Card #}
+        <div class="w-full sm:w-64 bg-white rounded-xl shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-300 ease-in-out p-6 flex flex-col items-center justify-center text-center group cursor-pointer border border-gray-200">
+            <a href="{% url 'bmi_calculator' %}" class="block w-full h-full">
+                <div class="text-5xl mb-3">⚖️</div>
+                <h3 class="text-xl font-bold text-gray-800 mb-1">BMI</h3>
+                <p class="text-gray-500 text-sm">Calculate your Body Mass Index</p>
+            </a>
+        </div>
+
+        {# Age Calculator Card #}
+        <div class="w-full sm:w-64 bg-white rounded-xl shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-300 ease-in-out p-6 flex flex-col items-center justify-center text-center group cursor-pointer border border-gray-200">
+            <a href="{% url 'age_calculator' %}" class="block w-full h-full">
+                <div class="text-5xl mb-3">🎂</div>
+                <h3 class="text-xl font-bold text-gray-800 mb-1">Age</h3>
+                <p class="text-gray-500 text-sm">Find your age in years/months/days</p>
+            </a>
+        </div>
+
+        {# Loan Calculator Card #}
+        <div class="w-full sm:w-64 bg-white rounded-xl shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-300 ease-in-out p-6 flex flex-col items-center justify-center text-center group cursor-pointer border border-gray-200">
+            <a href="{% url 'loan_calculator' %}" class="block w-full h-full">
+                <div class="text-5xl mb-3">💰</div>
+                <h3 class="text-xl font-bold text-gray-800 mb-1">Loan</h3>
+                <p class="text-gray-500 text-sm">See your monthly loan payments</p>
+            </a>
+        </div>
+
+        {# Currency Converter Card #}
+        <div class="w-full sm:w-64 bg-white rounded-xl shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-300 ease-in-out p-6 flex flex-col items-center justify-center text-center group cursor-pointer border border-gray-200">
+            <a href="{% url 'currency_converter' %}" class="block w-full h-full">
+                <div class="text-5xl mb-3">💱</div>
+                <h3 class="text-xl font-bold text-gray-800 mb-1">Currency</h3>
+                <p class="text-gray-500 text-sm">Convert currencies</p>
+            </a>
+        </div>
+
+        {# Tax Calculator Card #}
+        <div class="w-full sm:w-64 bg-white rounded-xl shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-300 ease-in-out p-6 flex flex-col items-center justify-center text-center group cursor-pointer border border-gray-200">
+            <a href="{% url 'tax_calculator' %}" class="block w-full h-full"> {# Replace '#' with actual URL #}
+                <div class="text-5xl mb-3">🧾</div>
+                <h3 class="text-xl font-bold text-gray-800 mb-1">Tax</h3>
+                <p class="text-gray-500 text-sm">Calculate your taxes</p>
+            </a>
+        </div>
+
+        {# GPA Converter Card #}
+          <div class="w-full sm:w-64 bg-white rounded-xl shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-300 ease-in-out p-6 flex flex-col items-center justify-center text-center group cursor-pointer border border-gray-200">
+              <a href="{% url 'gpa_calculator' %}" class="block w-full h-full">
+                  <div class="text-5xl mb-3">🎓</div> {# Graduation cap emoji #}
+                  <h3 class="text-xl font-bold text-gray-800 mb-1">GPA Calculator</h3>
+                  <p class="text-gray-500 text-sm">Convert your grades to GPA</p>
+              </a>
+          </div>
+
+        {# Time Difference Calculator Card #}
+        <div class="w-full sm:w-64 bg-white rounded-xl shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-300 ease-in-out p-6 flex flex-col items-center justify-center text-center group cursor-pointer border border-gray-200">
+            <a href="{% url 'time_difference' %}" class="block w-full h-full"> {# Replace '#' with actual URL #}
+                <div class="text-5xl mb-3">⏱️</div>
+                <h3 class="text-xl font-bold text-gray-800 mb-1">Time Difference</h3>
+                <p class="text-gray-500 text-sm">Calculate time differences</p>
+            </a>
+        </div>
+
+        {# Contact Calculator Card #}
+        <div class="w-full sm:w-64 bg-white rounded-xl shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-300 ease-in-out p-6 flex flex-col items-center justify-center text-center group cursor-pointer border border-gray-200">
+            <a href="{% url 'contact' %}" class="block w-full h-full"> {# Replace '#' with actual URL #}
+                <div class="text-5xl mb-3">📞</div>
+                <h3 class="text-xl font-bold text-gray-800 mb-1">Contact</h3>
+                <p class="text-gray-500 text-sm">Manage your contacts</p>
+            </a>
+        </div>
+
+        {# Phone Formatter Calculator Card #}
+        <div class="w-full sm:w-64 bg-white rounded-xl shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-300 ease-in-out p-6 flex flex-col items-center justify-center text-center group cursor-pointer border border-gray-200">
+            <a href="{% url 'country_code_lookup' %}" class="block w-full h-full"> {# Replace '#' with actual URL #}
+                <div class="text-5xl mb-3">📱</div>
+                <h3 class="text-xl font-bold text-gray-800 mb-1">Phone Formatter</h3>
+                <p class="text-gray-500 text-sm">Format phone numbers</p>
+            </a>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
