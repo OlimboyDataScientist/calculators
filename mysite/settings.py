@@ -33,6 +33,7 @@ ALLOWED_HOSTS = ['*']
 
 STATIC_URL = '/static/'
 
+CSRF_TRUSTED_ORIGINS = ['https://*.onrender.com']
 
 LOGIN_URL = 'login'
 LOGIN_REDIRECT_URL = 'home'  # Adjust this to your home page
