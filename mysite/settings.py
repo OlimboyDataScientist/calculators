@@ -92,7 +92,6 @@ INSTALLED_APPS = [
     'main',
     'accounts',
     'django.contrib.sites',
-    'captcha',
 
 ]
 

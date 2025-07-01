@@ -4,8 +4,7 @@ from django import forms
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
-from captcha.fields import ReCaptchaField
-from captcha.widgets import ReCaptchaV2Checkbox
+
 
 
 
@@ -25,7 +24,6 @@ class ContactForm(forms.Form):
         'placeholder': _('Type your message here...'),
         'rows': 5
     }))
-    captcha = ReCaptchaField(widget=ReCaptchaV2Checkbox)
 
 class RegisterForm(forms.ModelForm):
     password = forms.CharField(widget=forms.PasswordInput, label="Password")
